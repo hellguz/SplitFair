@@ -1,37 +1,52 @@
+"""
+Main application file for the FastAPI backend.
+Initializes the FastAPI app, includes routers, sets up CORS,
+and defines the startup event to create database tables.
+"""
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import api_router
-from app.db.session import Base, engine
+# Load environment variables
+load_dotenv()
 
+# Ensure all models are imported before initializing the database
+# This is crucial for Base.metadata.create_all() to work correctly
+from app.models.database import engine, Base
+from app.models.participant import Participant
+from app.models.group import Group, GroupMember
+from app.models.expense import Expense
 
-app = FastAPI(title="SplitWise Clone API")
+from app.api import groups, expenses
 
+# Create all database tables on startup
+def create_tables():
+    """Creates all database tables defined in the models."""
+    Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
+
+# Event handler for application startup
 @app.on_event("startup")
-async def on_startup():
-    """
-    This function runs when the application starts.
-    It connects to the database and creates all tables
-    defined in the SQLAlchemy models if they don't already exist.
-    """
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+def on_startup():
+    """Function to run on application startup."""
+    create_tables()
 
-
-# Configure CORS
+# Configure CORS (Cross-Origin Resource Sharing)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allows the React frontend
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
+# Include API routers
+app.include_router(groups.router)
+app.include_router(expenses.router)
 
 @app.get("/")
-async def root():
-    """
-    Root endpoint for the API.
-    """
-    return {"message": "Welcome to the SplitWise Clone API"}
+def read_root():
+    """Root endpoint for the API."""
+    return {"message": "Welcome to the SplitShare API"}

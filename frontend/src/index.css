@@ -7,36 +7,81 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
-  --primary-color: #646cff;
-  --secondary-color: #535bf2;
-  --background-color: #242424;
-  --surface-color: #2f2f2f;
-  --text-color: rgba(255, 255, 255, 0.87);
-  --border-color: #4a4a4a;
-  --positive-balance: #4caf50;
-  --negative-balance: #f44336;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
   min-width: 320px;
   min-height: 100vh;
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
   width: 100%;
+  max-width: 800px;
+  padding: 2rem;
 }
 
-h1 {
-  font-size: 2.5em;
-  line-height: 1.1;
-  color: var(--primary-color);
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.app-header {
+  text-align: center;
+  border-bottom: 1px solid #444;
+  padding-bottom: 1rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  color: #646cff;
+}
+
+.app-header p {
+  margin: 0.25rem 0 0;
+  opacity: 0.7;
+}
+
+.card {
+  background-color: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.25s;
+}
+
+.card:hover {
+  border-color: #646cff;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+label {
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #2a2a2a;
+  color: white;
+  box-sizing: border-box;
 }
 
 button {
@@ -49,36 +94,49 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-  margin: 0.5rem;
 }
 button:hover {
-  border-color: var(--primary-color);
+  border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
-
-input, select {
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: var(--surface-color);
-  color: var(--text-color);
-  margin: 0.5rem;
+button.primary {
+    background-color: #646cff;
+    color: white;
 }
 
-.container {
-  padding: 1rem;
-  background-color: var(--surface-color);
-  border-radius: 8px;
-  margin-top: 1rem;
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #2a2a2a;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.qr-code {
+    background: white;
+    padding: 1rem;
+    display: inline-block;
+    margin: 1rem 0;
 }
 
 .error {
-  color: var(--negative-balance);
-  margin-top: 1rem;
+    color: #ff6b6b;
+    margin-top: 1rem;
 }
+

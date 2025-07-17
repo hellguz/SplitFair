@@ -1,27 +1,34 @@
-from sqlalchemy import Column, Integer, String, Table, ForeignKey
+"""
+Database models for Group and GroupMember.
+"""
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
-
-from app.db.session import Base
-
-# Association Table for the many-to-many relationship between Users and Groups
-group_members = Table(
-    "group_members",
-    Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("group_id", Integer, ForeignKey("groups.id"), primary_key=True),
-)
+from app.models.database import Base
 
 class Group(Base):
-    """
-    SQLAlchemy model for a group.
-    """
+    """Represents a group of participants."""
     __tablename__ = "groups"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    invite_code = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, index=True)
+    invite_code = Column(String, unique=True, index=True)
 
-    # A group has many members (users)
-    members = relationship("User", secondary=group_members, back_populates="groups")
-    # A group has many expenses
+    members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
     expenses = relationship("Expense", back_populates="group", cascade="all, delete-orphan")
+
+class GroupMember(Base):
+    """Association object between a Group and a Participant."""
+    __tablename__ = "group_members"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nickname = Column(String)
+    group_id = Column(Integer, ForeignKey("groups.id"))
+    participant_id = Column(Integer, ForeignKey("participants.id"))
+
+    group = relationship("Group", back_populates="members")
+    participant = relationship("Participant", back_populates="memberships")
+    
+    paid_expenses = relationship("Expense", back_populates="payer", foreign_keys="[Expense.paid_by_member_id]")
+
+    __table_args__ = (UniqueConstraint('group_id', 'participant_id', name='_group_participant_uc'),)
+

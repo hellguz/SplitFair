@@ -1,26 +1,36 @@
-from typing import List
+"""
+Pydantic schemas for Group and GroupMember data validation.
+"""
+from typing import List, Optional
 from pydantic import BaseModel
 
-from .user import User, UserBalance
-from .expense import Expense
+class GroupMemberBase(BaseModel):
+    nickname: str
+
+class GroupMemberCreate(GroupMemberBase):
+    pass
+
+class GroupMember(GroupMemberBase):
+    id: int
+    group_id: int
+    participant_id: int
+
+    class Config:
+        from_attributes = True
 
 class GroupBase(BaseModel):
     name: str
 
 class GroupCreate(GroupBase):
-    pass
-
-class GroupJoin(BaseModel):
-    invite_code: str
+    creator_nickname: str
 
 class Group(GroupBase):
     id: int
     invite_code: str
+    members: List[GroupMember] = []
 
     class Config:
         from_attributes = True
 
-class GroupDetails(Group):
-    members: List[User] = []
-    expenses: List[Expense] = []
-    balances: List[UserBalance] = []
+class GroupMemberJoin(BaseModel):
+    nickname: str

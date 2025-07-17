@@ -1,34 +1,31 @@
-import datetime
+"""
+Database models for Expense and its participants.
+"""
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from app.models.database import Base
 
-from app.db.session import Base
-
-# Association Table for the many-to-many relationship between Users and Expenses (participants)
-expense_participants = Table(
-    "expense_participants",
-    Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("expense_id", Integer, ForeignKey("expenses.id"), primary_key=True),
+# Association table for the many-to-many relationship between Expense and GroupMember
+expense_participants_table = Table('expense_participants', Base.metadata,
+    Column('expense_id', Integer, ForeignKey('expenses.id'), primary_key=True),
+    Column('member_id', Integer, ForeignKey('group_members.id'), primary_key=True)
 )
 
 class Expense(Base):
-    """
-    SQLAlchemy model for an expense.
-    """
+    """Represents a single expense within a group."""
     __tablename__ = "expenses"
 
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String, nullable=False)
-    amount = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    description = Column(String)
+    amount = Column(Float)
+    date = Column(DateTime(timezone=True), server_default=func.now())
+    
+    group_id = Column(Integer, ForeignKey("groups.id"))
+    paid_by_member_id = Column(Integer, ForeignKey("group_members.id"))
 
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-    payer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # An expense belongs to one group
     group = relationship("Group", back_populates="expenses")
-    # An expense has one payer (a user)
-    payer = relationship("User")
-    # An expense has many participants (users)
-    participants = relationship("User", secondary=expense_participants, back_populates="expenses_participated")
+    payer = relationship("GroupMember", back_populates="paid_expenses", foreign_keys=[paid_by_member_id])
+
+    participants = relationship("GroupMember", secondary=expense_participants_table)
+

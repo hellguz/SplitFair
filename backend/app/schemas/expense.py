@@ -1,20 +1,27 @@
-from typing import List
-from pydantic import BaseModel, Field
+"""
+Pydantic schemas for Expense data validation.
+"""
 import datetime
+from typing import List
+from pydantic import BaseModel
+from app.schemas.group import GroupMember
 
 class ExpenseBase(BaseModel):
     description: str
-    amount: float = Field(..., gt=0)
+    amount: float
 
 class ExpenseCreate(ExpenseBase):
-    payer_uuid: str
-    participant_uuids: List[str] = Field(..., min_length=1)
+    group_id: int
+    paid_by_member_id: int
+    participant_member_ids: List[int]
 
 class Expense(ExpenseBase):
     id: int
-    created_at: datetime.datetime
-    payer_id: int
+    date: datetime.datetime
     group_id: int
-
+    paid_by_member_id: int
+    payer: GroupMember
+    participants: List[GroupMember] = []
+    
     class Config:
         from_attributes = True

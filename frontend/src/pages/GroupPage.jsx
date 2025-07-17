@@ -1,107 +1,60 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
-import api from '../api';
-import { AppContext } from '../context/AppContext';
-import AddExpenseForm from '../components/AddExpenseForm';
-import BalanceSummary from '../components/BalanceSummary';
+import api from '../services/api';
+import GroupHeader from '../components/GroupHeader';
+import BalanceView from '../components/BalanceView';
 import ExpenseList from '../components/ExpenseList';
-import './GroupPage.css';
+import ExpenseForm from '../components/ExpenseForm';
 
 /**
- * Displays the details of a single group, including members,
- * balances, expenses, and forms for interaction.
+ * Page component for displaying a single group's details.
+ * @returns {JSX.Element} The rendered group page.
  */
 function GroupPage() {
   const { groupId } = useParams();
-  const { user } = useContext(AppContext);
-  const [groupDetails, setGroupDetails] = useState(null);
+  const [group, setGroup] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+  const [balances, setBalances] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchGroupDetails = async () => {
-    setError('');
+  const fetchData = useCallback(async () => {
     try {
-      const response = await api.get(`/api/groups/${groupId}`);
-      setGroupDetails(response.data);
+      setLoading(true);
+      const groupRes = await api.get(`/groups/${groupId}`);
+      const expensesRes = await api.get(`/groups/${groupId}/expenses`);
+      const balancesRes = await api.get(`/groups/${groupId}/balances`);
+      
+      setGroup(groupRes.data);
+      setExpenses(expensesRes.data);
+      setBalances(balancesRes.data);
+      setError('');
     } catch (err) {
-      console.error("Failed to fetch group details:", err);
-      setError(err.response?.data?.detail || "Could not load group details. You may not be a member.");
+      setError('Failed to load group data. The group may not exist.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchGroupDetails();
   }, [groupId]);
 
-  const onExpenseAdded = () => {
-    // Refetch details to show the new expense and updated balances
-    fetchGroupDetails();
-  };
-  
-  const onExpenseDeleted = () => {
-    fetchGroupDetails();
-  }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  if (loading) return <div className="loading">Loading Group...</div>;
+  if (loading) return <div>Loading group...</div>;
   if (error) return <div className="error">{error}</div>;
-  if (!groupDetails) return null;
+  if (!group) return <div>Group not found.</div>;
 
   return (
-    <div className="group-page">
-      <Link to="/" className="back-link">← Back to All Groups</Link>
-      <h2>{groupDetails.name}</h2>
-      
-      <div className="group-main-content">
-        <div className="group-column">
-          <div className="container members-container">
-            <h3>Members</h3>
-            <ul>
-              {groupDetails.members.map(member => (
-                <li key={member.uuid}>{member.name} {member.uuid === user.uuid && "(You)"}</li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="container invite-container">
-            <h3>Invite Others</h3>
-            <p>Share this code:</p>
-            <code className="invite-code">{groupDetails.invite_code}</code>
-            <div className="qrcode-container">
-              <QRCodeSVG value={groupDetails.invite_code} bgColor="#2f2f2f" fgColor="#ffffff" />
-            </div>
-          </div>
-          
-          <div className="container">
-            <h3>Add New Expense</h3>
-            <AddExpenseForm
-              groupId={groupId}
-              members={groupDetails.members}
-              onExpenseAdded={onExpenseAdded}
-            />
-          </div>
-        </div>
-
-        <div className="group-column">
-          <div className="container">
-            <h3>Balances</h3>
-            <BalanceSummary balances={groupDetails.balances} members={groupDetails.members} />
-          </div>
-          <div className="container">
-            <h3>Expense History</h3>
-            <ExpenseList 
-              expenses={groupDetails.expenses}
-              members={groupDetails.members}
-              currentUser={user}
-              onExpenseDeleted={onExpenseDeleted}
-            />
-          </div>
-        </div>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <Link to="/">&larr; Back to all groups</Link>
+      <GroupHeader name={group.name} inviteCode={group.invite_code} />
+      {balances && <BalanceView balances={balances.balances} transactions={balances.transactions} members={group.members} />}
+      <ExpenseForm groupId={group.id} members={group.members} onExpenseAdded={fetchData} />
+      <ExpenseList expenses={expenses} onExpenseDeleted={fetchData} />
     </div>
   );
 }
 
 export default GroupPage;
+
