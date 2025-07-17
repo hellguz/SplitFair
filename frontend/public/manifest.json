@@ -1,9 +1,0 @@
-{
-  "short_name": "SplitFair",
-  "name": "SplitFair - Fairly Simple Expenses",
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
-}
-
